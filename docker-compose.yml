@@ -10,7 +10,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./src:/var/www/api.e-loa.id
+      - ./src:/var/www/be-game-bahasaku
     networks:
       - game_network
     depends_on:
