@@ -14,23 +14,48 @@ $player = new Player($db);
 
 $data = json_decode(file_get_contents("php://input"));
 
-if(
-    !empty($data->username) &&
-    !empty($data->email) &&
-    !empty($data->password)
-) {
-    $player->username = $data->username;
-    $player->email = $data->email;
-    $player->password = $data->password;
+// Fungsi untuk generate email otomatis (username + domain gamebahasaku.com)
+function generateEmail($username) {
+    $domain = 'gamebahasaku.com'; // Domain tetap
+    return $username . '@' . $domain;
+}
 
-    if($player->create()) {
+// Fungsi untuk generate password otomatis (8 karakter alfanumerik)
+function generatePassword($length = 8) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $password = '';
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $password;
+}
+
+if (!empty($data->username)) {
+    // Generate email dan password otomatis
+    $email = generateEmail($data->username);
+    $password = generatePassword();
+
+    // Opsional: Cek apakah email sudah ada di DB (jika diperlukan untuk unik)
+    // Misalnya, query SELECT * FROM players WHERE email = '$email'
+    // Jika ada, generate ulang sampai unik. (Tidak diimplementasi di sini, tambahkan jika perlu)
+
+    $player->username = $data->username;
+    $player->email = $email;
+    $player->password = password_hash($password, PASSWORD_DEFAULT); // Hash password untuk keamanan
+
+    if ($player->create()) {
         http_response_code(201);
-        echo json_encode(array("message" => "Player was created."));
+        echo json_encode(array(
+            "message" => "Player was created.",
+            "generated_email" => $email,  // Opsional: Kirim email ke client untuk info
+            "generated_password" => $password  // Opsional: Kirim password ke client (hati-hati, hanya untuk testing!)
+        ));
     } else {
         http_response_code(503);
         echo json_encode(array("message" => "Unable to create player."));
     }
 } else {
     http_response_code(400);
-    echo json_encode(array("message" => "Unable to create player. Data is incomplete."));
+    echo json_encode(array("message" => "Unable to create player. Username is required."));
 }
+?>

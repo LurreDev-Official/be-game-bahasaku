@@ -132,3 +132,16 @@ public class APIClient : MonoBehaviour
     }
 }
 ```
+
+#pull
+git pull origin master
+
+
+
+curl -X POST https://api.e-loa.id/api/ranking/create.php \
+-H "Content-Type: application/json" \
+-d '{
+    "player_id": 1,
+    "score": 1500,
+    "level": 12
+}'
