@@ -1,7 +1,7 @@
 <?php
 class Player {
     private $conn;
-    private $table_name = "players";
+    private $table_name = "players"; // Table name
 
     public $id;
     public $username;
@@ -104,4 +104,41 @@ class Player {
         }
         return false;
     }
+
+    // Check if username already exists
+    public function usernameExists() {
+        $query = "SELECT id FROM " . $this->table_name . " WHERE username = :username LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':username', $this->username);
+
+        // Execute query
+        $stmt->execute();
+
+        // Check if a record exists
+        if ($stmt->rowCount() > 0) {
+            return true; // Username exists
+        }
+
+        return false; // Username does not exist
+    }
+
+    // Get player details by username
+    public function getPlayerByUsername() {
+        $query = "SELECT id, username, email FROM " . $this->table_name . " WHERE username = :username LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':username', $this->username);
+
+        // Execute query
+        $stmt->execute();
+
+        // Fetch the player data
+        if ($stmt->rowCount() > 0) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        return null; // No player found
+    }
 }
+?>
