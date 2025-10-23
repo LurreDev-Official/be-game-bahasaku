@@ -44,9 +44,13 @@ if (!empty($data->username)) {
     $player->password = password_hash($password, PASSWORD_DEFAULT); // Hash password untuk keamanan
 
     if ($player->create()) {
+        // Mengambil ID player yang baru saja disimpan
+        $player_id = $player->id; // Pastikan objek Player memiliki atribut `id` yang sesuai
+
         http_response_code(201);
         echo json_encode(array(
             "message" => "Player was created.",
+            "player_id" => $player_id,  // Mengirimkan player_id setelah berhasil dibuat
             "generated_email" => $email,  // Opsional: Kirim email ke client untuk info
             "generated_password" => $password  // Opsional: Kirim password ke client (hati-hati, hanya untuk testing!)
         ));
