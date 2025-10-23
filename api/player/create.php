@@ -31,32 +31,41 @@ function generatePassword($length = 8) {
 }
 
 if (!empty($data->username)) {
-    // Generate email dan password otomatis
-    $email = generateEmail($data->username);
-    $password = generatePassword();
-
-    // Opsional: Cek apakah email sudah ada di DB (jika diperlukan untuk unik)
-    // Misalnya, query SELECT * FROM players WHERE email = '$email'
-    // Jika ada, generate ulang sampai unik. (Tidak diimplementasi di sini, tambahkan jika perlu)
-
+    // Cek apakah username sudah ada di database
     $player->username = $data->username;
-    $player->email = $email;
-    $player->password = password_hash($password, PASSWORD_DEFAULT); // Hash password untuk keamanan
-
-    if ($player->create()) {
-        // Mengambil ID player yang baru saja disimpan
-        $player_id = $player->id; // Pastikan objek Player memiliki atribut `id` yang sesuai
-
-        http_response_code(201);
+    if ($player->usernameExists()) {  // Assuming usernameExists method checks if username already exists
+        // Jika username sudah ada, ambil data pemain dan kirimkan kembali
+        $existingPlayer = $player->getPlayerByUsername();  // Assuming getPlayerByUsername fetches player details by username
+        http_response_code(200);
         echo json_encode(array(
-            "message" => "Player was created.",
-            "player_id" => $player_id,  // Mengirimkan player_id setelah berhasil dibuat
-            "generated_email" => $email,  // Opsional: Kirim email ke client untuk info
-            "generated_password" => $password  // Opsional: Kirim password ke client (hati-hati, hanya untuk testing!)
+            "message" => "Player already exists.",
+            "player_id" => $existingPlayer['id'],
+            "username" => $existingPlayer['username'],
+            "email" => $existingPlayer['email']
         ));
     } else {
-        http_response_code(503);
-        echo json_encode(array("message" => "Unable to create player."));
+        // Generate email dan password otomatis
+        $email = generateEmail($data->username);
+        $password = generatePassword();
+
+        $player->email = $email;
+        $player->password = password_hash($password, PASSWORD_DEFAULT); // Hash password untuk keamanan
+
+        if ($player->create()) {
+            // Mengambil ID player yang baru saja disimpan
+            $player_id = $player->id;
+
+            http_response_code(201);
+            echo json_encode(array(
+                "message" => "Player was created.",
+                "player_id" => $player_id,
+                "generated_email" => $email,
+                "generated_password" => $password
+            ));
+        } else {
+            http_response_code(503);
+            echo json_encode(array("message" => "Unable to create player."));
+        }
     }
 } else {
     http_response_code(400);
